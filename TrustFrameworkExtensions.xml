@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<TrustFrameworkPolicy 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+  xmlns="http://schemas.microsoft.com/online/cpim/schemas/2013/06" 
+  PolicySchemaVersion="0.3.0.0" 
+  TenantId="yewecomm.onmicrosoft.com" 
+  PolicyId="B2C_1A_TrustFrameworkExtensions" 
+  PublicPolicyUri="https://yewecomm.onmicrosoft.com/B2C_1A_TrustFrameworkExtensions">
+  
+  <BasePolicy>
+    <TenantId>yewecomm.onmicrosoft.com</TenantId>
+    <PolicyId>B2C_1A_TrustFrameworkBase</PolicyId>
+  </BasePolicy>
+
+  <BuildingBlocks>
+    <ClaimsSchema>
+      <ClaimType Id="extension_AppSpecificId">
+        <DisplayName>Application Specific Identifier</DisplayName>
+        <DataType>string</DataType>
+        <DefaultPartnerClaimTypes>
+          <Protocol Name="OAuth2" PartnerClaimType="extension_AppSpecificId" />
+        </DefaultPartnerClaimTypes>
+        <UserHelpText>Unique identifier for each application</UserHelpText>
+      </ClaimType>
+      <ClaimType Id="id_token">
+        <DisplayName>Id Token</DisplayName>
+        <DataType>string</DataType>
+        <DefaultPartnerClaimTypes>
+          <Protocol Name="OAuth2" PartnerClaimType="id_token" />
+        </DefaultPartnerClaimTypes>
+        <UserHelpText>Id Token</UserHelpText>
+      </ClaimType>
+    </ClaimsSchema>
+  </BuildingBlocks>
+
+  <ClaimsProviders>
+    <ClaimsProvider>
+      <DisplayName>Local Account SignIn</DisplayName>
+      <TechnicalProfiles>
+        <!-- Common Technical Profile -->
+        <TechnicalProfile Id="login-NonInteractive-Common">
+          <DisplayName>Common Non-Interactive Technical Profile</DisplayName>
+          <Protocol Name="OAuth2" />
+          <Metadata>
+            <Item Key="client_id">4603cebb-679c-458a-9594-d7951543d9bf</Item> <!-- Replace with actual client ID -->
+            <Item Key="IdTokenAudience">4603cebb-679c-458a-9594-d7951543d9bf</Item> <!-- Replace with actual client ID -->
+            <Item Key="authority">https://login.microsoftonline.com/f200eb36-3bc7-4fe9-9e25-3eeb7b72c07e/v2.0</Item>
+            <Item Key="BearerTokenTransmissionMethod">AuthorizationHeader</Item>
+          </Metadata>
+          <CryptographicKeys>
+            <Key Id="client_secret" StorageReferenceId="B2C_1A_TokenSigningKeyContainer" />
+          </CryptographicKeys>
+          <InputClaims>
+            <InputClaim ClaimTypeReferenceId="id_token" PartnerClaimType="id_token" />
+          </InputClaims>
+          <OutputClaims>
+            <OutputClaim ClaimTypeReferenceId="authenticationSource" DefaultValue="login-NonInteractive" />
+            <OutputClaim ClaimTypeReferenceId="displayName" PartnerClaimType="name" />
+            <OutputClaim ClaimTypeReferenceId="givenName" PartnerClaimType="given_name" />
+            <OutputClaim ClaimTypeReferenceId="surname" PartnerClaimType="family_name" />
+            <OutputClaim ClaimTypeReferenceId="email" PartnerClaimType="email" />
+            <OutputClaim ClaimTypeReferenceId="objectId" PartnerClaimType="sub" />
+            <OutputClaim ClaimTypeReferenceId="tenantId" DefaultValue="{Policy:TenantObjectId}" AlwaysUseDefaultValue="true" />
+          </OutputClaims>
+        </TechnicalProfile>
+
+        <!-- GlossGlamor Technical Profile -->
+        <TechnicalProfile Id="GlossGlamor-login-NonInteractive">
+          <DisplayName>GlossGlamor Login Non-Interactive</DisplayName>
+          <Protocol Name="OAuth2" />
+          <Metadata>
+            <Item Key="client_id">2026c33d-81b3-495a-99ac-26e0c8d912b1</Item>
+            <Item Key="IdTokenAudience">2026c33d-81b3-495a-99ac-26e0c8d912b1</Item>
+            <Item Key="authority">https://login.microsoftonline.com/{tenant}/v2.0</Item>
+          </Metadata>
+          <IncludeTechnicalProfile ReferenceId="login-NonInteractive-Common" />
+        </TechnicalProfile>
+
+        <!-- yewsupermarket Technical Profile -->
+        <TechnicalProfile Id="yewsupermarket-login-NonInteractive">
+          <DisplayName>yewsupermarket Login Non-Interactive</DisplayName>
+          <Protocol Name="OAuth2" />
+          <Metadata>
+            <Item Key="client_id">832aa4fb-c486-4315-af4a-d8cf66b5a178</Item>
+            <Item Key="IdTokenAudience">832aa4fb-c486-4315-af4a-d8cf66b5a178</Item>
+            <Item Key="authority">https://login.microsoftonline.com/{tenant}/v2.0</Item>
+          </Metadata>
+          <IncludeTechnicalProfile ReferenceId="login-NonInteractive-Common" />
+        </TechnicalProfile>
+      </TechnicalProfiles>
+    </ClaimsProvider>
+  </ClaimsProviders>
+
+  <UserJourneys>
+    <UserJourney Id="SignUpOrSignIn">
+      <OrchestrationSteps>
+        <OrchestrationStep Order="1" Type="CombinedSignInAndSignUp" ContentDefinitionReferenceId="api.signuporsignin">
+          <ClaimsProviderSelections>
+            <ClaimsProviderSelection ValidationClaimsExchangeId="LocalAccountSigninEmailExchange" />
+          </ClaimsProviderSelections>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="LocalAccountSigninEmailExchange" TechnicalProfileReferenceId="SelfAsserted-LocalAccountSignin-Email" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="2" Type="ClaimsExchange">
+          <Preconditions>
+            <Precondition Type="ClaimsExist" ExecuteActionsIf="true">
+              <Value>objectId</Value>
+              <Action>SkipThisOrchestrationStep</Action>
+            </Precondition>
+          </Preconditions>
+          <ClaimsExchanges>
+            <ClaimsExchange Id="SignUpWithLogonEmailExchange" TechnicalProfileReferenceId="LocalAccountSignUpWithLogonEmail" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="3" Type="ClaimsExchange">
+          <ClaimsExchanges>
+            <ClaimsExchange Id="AADUserReadWithObjectId" TechnicalProfileReferenceId="AAD-UserReadUsingObjectId" />
+          </ClaimsExchanges>
+        </OrchestrationStep>
+
+        <OrchestrationStep Order="4" Type="SendClaims" CpimIssuerTechnicalProfileReferenceId="JwtIssuer" />
+      </OrchestrationSteps>
+      <ClientDefinition ReferenceId="DefaultWeb" />
+    </UserJourney>
+  </UserJourneys>
+</TrustFrameworkPolicy>
